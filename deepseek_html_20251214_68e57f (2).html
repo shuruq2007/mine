@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BearBuddy - 3D Talking Bear</title>
+    <!-- Three.js for 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls for camera -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Animation for bear's mouth when talking */
+        @keyframes talk {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.3); }
+        }
+        
+        .talking .bear-mouth {
+            animation: talk 0.3s infinite;
+        }
+        
+        /* Eye blink animation */
+        @keyframes blink {
+            0%, 90%, 100% { height: 20px; }
+            95% { height: 2px; }
+        }
+        
+        .bear-eye {
+            animation: blink 3s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Canvas -->
+    <canvas id="forestBg"></canvas>
+    
+    <!-- Snowfall Effect -->
+    <div class="snowfall"></div>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="bear-icon">
+                    <i class="fas fa-paw"></i>
+                </div>
+                <h1>Bear<span>Buddy</span></h1>
+                <div class="tagline">Your 3D Talking Bear Friend</div>
+            </div>
+            
+            <nav class="main-nav">
+                <a href="#" class="nav-btn active"><i class="fas fa-home"></i> Home</a>
+                <a href="#" class="nav-btn"><i class="fas fa-gamepad"></i> Games</a>
+                <a href="#" class="nav-btn"><i class="fas fa-book"></i> Stories</a>
+                <a href="#" class="nav-btn"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- 3D Bear Container -->
+            <section class="bear-section">
+                <div class="bear-container">
+                    <!-- 3D Canvas -->
+                    <canvas id="bearCanvas"></canvas>
+                    
+                    <!-- Bear Name Tag -->
+                    <div class="bear-name">
+                        <div class="name-tag">
+                            <i class="fas fa-tag"></i>
+                            <span>Buddy the Bear</span>
+                        </div>
+                        <div class="mood-indicator">
+                            <span class="mood happy">😊 Happy</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Bear Controls -->
+                    <div class="bear-controls">
+                        <button class="control-btn" id="petBear">
+                            <i class="fas fa-hand-paper"></i>
+                            <span>Pet</span>
+                        </button>
+                        <button class="control-btn" id="feedBear">
+                            <i class="fas fa-apple-alt"></i>
+                            <span>Feed</span>
+                        </button>
+                        <button class="control-btn" id="danceBear">
+                            <i class="fas fa-music"></i>
+                            <span>Dance</span>
+                        </button>
+                        <button class="control-btn" id="sleepBear">
+                            <i class="fas fa-bed"></i>
+                            <span>Sleep</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bear Status -->
+                <div class="bear-status">
+                    <div class="status-item">
+                        <div class="status-label">Happiness</div>
+                        <div class="status-bar">
+                            <div class="status-fill happiness" style="width: 85%"></div>
+                        </div>
+                        <span class="status-value">85%</span>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Energy</div>
+                        <div class="status-bar">
+                            <div class="status-fill energy" style="width: 70%"></div>
+                        </div>
+                        <span class="status-value">70%</span>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Hunger</div>
+                        <div class="status-bar">
+                            <div class="status-fill hunger" style="width: 40%"></div>
+                        </div>
+                        <span class="status-value">40%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chat Section -->
+            <section class="chat-section">
+                <div class="chat-header">
+                    <h2><i class="fas fa-comments"></i> Talk with Buddy</h2>
+                    <div class="voice-controls">
+                        <button class="voice-btn" id="voiceToggle">
+                            <i class="fas fa-microphone"></i>
+                            <span>Voice</span>
+                        </button>
+                        <button class="voice-btn" id="muteBear">
+                            <i class="fas fa-volume-up"></i>
+                            <span>Sound</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Chat Messages -->
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bear-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-bear"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <strong>Buddy the Bear</strong>
+                                <span class="message-time">Just now</span>
+                            </div>
+                            <p>Hi there! 👋 I'm Buddy, your friendly talking bear! You can talk to me, pet me, feed me, or ask me to dance! What would you like to do?</p>
+                        </div>
+                    </div>
+                    
+                    <div class="message bear-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-bear"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <strong>Buddy the Bear</strong>
+                                <span class="message-time">Just now</span>
+                            </div>
+                            <p>Try saying: "Hello Buddy", "Tell me a joke", "How are you?", or "Let's dance!"</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Phrases -->
+                <div class="quick-phrases">
+                    <h3>Quick Phrases</h3>
+                    <div class="phrase-buttons">
+                        <button class="phrase-btn" data-text="Hello Buddy!">
+                            👋 Hello
+                        </button>
+                        <button class="phrase-btn" data-text="Tell me a joke">
+                            😄 Joke
+                        </button>
+                        <button class="phrase-btn" data-text="How are you?">
+                            ❓ How are you?
+                        </button>
+                        <button class="phrase-btn" data-text="I love you">
+                            ❤️ Love
+                        </button>
+                        <button class="phrase-btn" data-text="Let's dance!">
+                            💃 Dance
+                        </button>
+                        <button class="phrase-btn" data-text="Tell me a story">
+                            📖 Story
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Chat Input -->
+                <div class="chat-input">
+                    <div class="input-wrapper">
+                        <input type="text" 
+                               id="messageInput" 
+                               placeholder="Type your message to Buddy... (Press Enter to send)"
+                               autocomplete="off">
+                        <button class="send-btn" id="sendMessage">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Voice Input -->
+                    <div class="voice-input" id="voiceInput">
+                        <div class="voice-indicator">
+                            <div class="voice-wave"></div>
+                            <div class="voice-wave"></div>
+                            <div class="voice-wave"></div>
+                            <div class="voice-wave"></div>
+                            <div class="voice-wave"></div>
+                        </div>
+                        <p id="voiceText">Click and speak to Buddy...</p>
+                        <button class="record-btn" id="recordBtn">
+                            <i class="fas fa-microphone"></i>
+                            Hold to Talk
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bear Activities -->
+            <section class="activities">
+                <h2><i class="fas fa-star"></i> Fun Activities</h2>
+                <div class="activity-grid">
+                    <div class="activity-card" id="storyTime">
+                        <div class="activity-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <h3>Story Time</h3>
+                        <p>Listen to Buddy tell fun stories</p>
+                    </div>
+                    
+                    <div class="activity-card" id="bearGames">
+                        <div class="activity-icon">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <h3>Bear Games</h3>
+                        <p>Play games with Buddy</p>
+                    </div>
+                    
+                    <div class="activity-card" id="learnWithBear">
+                        <div class="activity-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h3>Learn with Bear</h3>
+                        <p>Educational fun</p>
+                    </div>
+                    
+                    <div class="activity-card" id="bearPhotoshoot">
+                        <div class="activity-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h3>Photoshoot</h3>
+                        <p>Take pictures with Buddy</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bear Facts -->
+        <aside class="bear-facts">
+            <div class="facts-header">
+                <h3><i class="fas fa-info-circle"></i> Bear Facts</h3>
+                <button id="newFact" class="fact-btn">
+                    <i class="fas fa-sync"></i> New Fact
+                </button>
+            </div>
+            <div class="facts-content">
+                <div class="fact-item">
+                    <i class="fas fa-paw"></i>
+                    <p>Bears have an excellent sense of smell, better than dogs!</p>
+                </div>
+                <div class="fact-item">
+                    <i class="fas fa-bed"></i>
+                    <p>Some bears hibernate for up to 7 months!</p>
+                </div>
+                <div class="fact-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <p>Bears can run up to 40 mph - faster than humans!</p>
+                </div>
+            </div>
+            
+            <!-- Bear Sounds -->
+            <div class="bear-sounds">
+                <h3><i class="fas fa-volume-up"></i> Bear Sounds</h3>
+                <div class="sound-buttons">
+                    <button class="sound-btn" data-sound="growl">
+                        <i class="fas fa-volume-up"></i> Growl
+                    </button>
+                    <button class="sound-btn" data-sound="roar">
+                        <i class="fas fa-volume-up"></i> Roar
+                    </button>
+                    <button class="sound-btn" data-sound="happy">
+                        <i class="fas fa-volume-up"></i> Happy
+                    </button>
+                    <button class="sound-btn" data-sound="snore">
+                        <i class="fas fa-volume-up"></i> Snore
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Bear Dance Modal -->
+    <div class="modal" id="danceModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2><i class="fas fa-music"></i> Dance Party!</h2>
+            <div class="dance-container">
+                <div class="dance-floor">
+                    <div class="dancing-bear" id="dancingBear">
+                        💃🐻🕺
+                    </div>
+                    <div class="music-controls">
+                        <button class="music-btn" id="playMusic">
+                            <i class="fas fa-play"></i> Play Music
+                        </button>
+                        <button class="music-btn" id="changeDance">
+                            <i class="fas fa-random"></i> Change Dance
+                        </button>
+                    </div>
+                </div>
+                <div class="song-list">
+                    <h3>Choose a Song:</h3>
+                    <div class="songs">
+                        <button class="song-btn" data-song="disco">🕺 Disco Beat</button>
+                        <button class="song-btn" data-song="rock">🎸 Rock n Roll</button>
+                        <button class="song-btn" data-song="jazz">🎷 Jazz</button>
+                        <button class="song-btn" data-song="pop">🎤 Pop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div class="welcome-modal" id="welcomeModal">
+        <div class="welcome-content">
+            <div class="welcome-bear">
+                🐻✨
+            </div>
+            <h2>Welcome to BearBuddy!</h2>
+            <p>Meet Buddy, your new 3D talking bear friend! You can:</p>
+            <ul class="welcome-features">
+                <li><i class="fas fa-comment"></i> Chat with Buddy</li>
+                <li><i class="fas fa-hand-paper"></i> Pet and feed him</li>
+                <li><i class="fas fa-music"></i> Watch him dance</li>
+                <li><i class="fas fa-microphone"></i> Talk using voice</li>
+            </ul>
+            <button class="btn btn-primary" id="startAdventure">
+                Start Adventure! <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="bearSound" preload="auto"></audio>
+    <audio id="backgroundMusic" loop preload="auto"></audio>
+    
+    <!-- Scripts -->
+    <script src="three-bear.js"></script>
+    <script src="bear-ai.js"></script>
+</body>
+</html>
